@@ -32,4 +32,4 @@ SELECT AVG(FLOOR((TO_DAYS(NOW()) - TO_DAYS(birthday_at))/365.25))  AS 'Сред�
 SELECT name, DAYNAME(birthday_at) as 'День недели' FROM users;
 SELECT YEAR(now());
 SELECT name, str_to_date(concat(DATE_FORMAT(birthday_at, '%d.%m'),'.', YEAR(now())), '%d.%m.%Y') as 'Дата', DAYNAME(str_to_date(concat(DATE_FORMAT(birthday_at, '%d.%m'),'.', YEAR(now())), '%d.%m.%Y')) as 'День недели' FROM users;
--- 3)(по желанию) Подсчитайте произведение чисел в столбце таблицы.
+SELECT DAYNAME(str_to_date(concat(DATE_FORMAT(birthday_at, '%d.%m'),'.', YEAR(now())), '%d.%m.%Y')) as `День Недели`, COUNT(DAYNAME(str_to_date(concat(DATE_FORMAT(birthday_at, '%d.%m'),'.', YEAR(now())), '%d.%m.%Y'))) as `Число дней Рождения`  FROM users GROUP BY `День Недели`
