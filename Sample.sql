@@ -1,0 +1,10 @@
+DROP DATABASE sample;
+CREATE DATABASE sample;
+USE sample;
+
+DROP TABLE IF EXISTS users;
+CREATE TABLE users (
+	id SERIAL,
+	name VARCHAR(100),
+	UNIQUE KEY(name)
+	);
