@@ -26,9 +26,8 @@ CREATE TABLE user_type(
 ) COMMENT 'Типы пользователей';
 
 CREATE TABLE profiles(
-	user_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT 'ID пользователя',
-    first_name VARCHAR(100) NOT NULL COMMENT 'Имя пользователя', 
-    second_name VARCHAR (100) NOT NULL COMMENT 'Фамилия пользователя',
+	id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT 'ID строки',
+	user_id INT UNSIGNED NOT NULL COMMENT 'ID пользователя',
     gender varchar(10) COMMENT 'Пол',
     birthday DATETIME NOT NULL COMMENT'Дата рождения',
     country VARCHAR(100) COMMENT 'Страна',
