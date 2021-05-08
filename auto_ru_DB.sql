@@ -88,7 +88,7 @@ CREATE TABLE messages(
     to_user_id INT UNSIGNED NOT NULL,
     offer_id INT UNSIGNED NOT NULL,
     message_text TEXT NOT NULL,
-    media_id INT UNSIGNED NOT NULL,
+    media_id INT UNSIGNED,
     message_status_id INT UNSIGNED NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'дата создания записи',
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'дата обновления записи'
