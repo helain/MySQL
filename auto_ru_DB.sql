@@ -17,8 +17,6 @@ CREATE TABLE users(
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'дата обновления записи'
 ) COMMENT 'Таблица пользователей';
 
-ALTER TABLE users ADD CONSTRAINT `phone_check` CHECK (REGEXP_LIKE(phone, '[0-9]{11}'));
-ALTER TABLE users ADD CONSTRAINT `email_check` CHECK (email LIKE('%@%'));
 
 CREATE TABLE user_type(
 	id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT 'ID строки',
@@ -163,3 +161,95 @@ ALTER TABLE messages ADD CONSTRAINT fk_media_id FOREIGN KEY (media_id) REFERENCE
 ALTER TABLE messages ADD CONSTRAINT fk_message_status_id FOREIGN KEY (message_status_id) REFERENCES message_status(id);
 
 ALTER TABLE auto ADD CONSTRAINT fk_auto_mark_id FOREIGN KEY (auto_mark_id) REFERENCES auto_mark(id);
+
+-- индексы
+-- для таблицы users
+
+CREATE INDEX second_name ON users(second_name);
+-- для таблицы profiles
+
+CREATE INDEX country ON profiles(country);
+-- для таблицы sales_offer
+
+CREATE INDEX auto_price ON sales_offer(auto_id, price);
+
+-- для таблицы media
+CREATE INDEX filesize ON media(filesize);
+CREATE INDEX type_size ON media (media_type_id, filesize);
+
+-- создание процедуры
+
+DELIMITER //
+CREATE PROCEDURE actual_check ()
+BEGIN
+	SET @var=(date_sub(now(), interval 5 day));
+	SET @i=(SELECT 
+				count(*) 
+			FROM 
+				sales_offer 
+			WHERE 
+				offer_status_id=2
+		  );
+    WHILE @i>0 DO
+		set @update_date = (SELECT 
+						updated_at 
+					FROM 
+						(SELECT 
+							id
+							,offer_status_id
+                            , updated_at
+                            , row_number() OVER() as numb 
+						FROM sales_offer 
+                        WHERE offer_status_id=2 
+                        ORDER BY updated_at) AS tabl 
+                        WHERE numb=@i);
+		set @id_offer = (SELECT 
+						id 
+						FROM 
+							(SELECT 
+								id
+								,offer_status_id
+								, updated_at
+								, row_number() OVER() as numb 
+							FROM sales_offer 
+							WHERE offer_status_id=2 
+							ORDER BY updated_at) as tabl
+                            WHERE numb=@i
+						);
+		IF (@var>@update_date) 
+			then update sales_offer set offer_status_id=1 where id=@id_offer;
+        END IF;
+        set @i=@i-1;
+	END WHILE;
+END//
+
+-- триггеры
+
+
+DELIMITER //
+CREATE TRIGGER company_check BEFORE INSERT ON profiles FOR EACH ROW 
+BEGIN
+	IF ((SELECT user_type_id FROM users WHERE id=new.user_id)=2 AND new.company_id IS NULL) 
+    THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='некорректные данные';
+    END IF;
+    END//
+    
+-- представления
+-- продажи авто за год.
+CREATE VIEW auto_sold (car_brand, car_model, price, year_of_sale) AS
+	SELECT am.name, a.name, so.price, (year(so.updated_at))
+    FROM sales_offer AS so
+    INNER JOIN auto AS a ON so.auto_id = a.id
+    INNER JOIN auto_mark AS am ON am.id=a.auto_mark_id
+    WHERE offer_status_id = 3;
+
+-- авто в продаже
+CREATE VIEW auto_on_sale (user_id, car_brand, car_model, car_condition, car_price, created_at, car_status ) AS
+	SELECT so.user_id, am.name, a.name, ast.name, so.price, so.created_at, os.name
+    FROM sales_offer AS so
+    INNER JOIN auto AS a ON so.auto_id = a.id
+    INNER JOIN auto_mark AS am ON am.id=a.auto_mark_id
+    INNER JOIN auto_status AS ast ON so.auto_status_id=ast.id
+    INNER JOIN offer_status AS os ON so.offer_status_id=os.id
+    WHERE offer_status_id IN (1,2,4);
+    
